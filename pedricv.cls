@@ -107,6 +107,7 @@
 
 % Thick bar across the column: overhangs the outer text edge slightly and
 % runs to the vertical rule on the inner side, as one continuous grid.
+% Drawn as leaders (i.e. glue), so it is discarded at the top of a column.
 \newcommand\cv@bar{%
   \ifcv@incols
     \ifnum\pcol@currcol=\z@
@@ -118,11 +119,12 @@
     \cv@barline{\cv@barout}{\cv@barout}%
   \fi}
 \newcommand\cv@barline[2]{%
-  \makebox[\linewidth][l]{\hspace*{-#1}%
-    \rule{\dimexpr\linewidth+#1+#2\relax}{\cv@barwd}}\par}
+  \par
+  \cleaders\hbox to\linewidth{\hspace*{-#1}%
+    \vrule width\dimexpr\linewidth+#1+#2\relax height\cv@barwd depth\z@\hss}%
+  \vskip\cv@barwd}
 
-% \cvsection{Title} — bar, then heading.  \cvsection*{Title} — no bar, for
-% the first section at the top of a column.
+% \cvsection{Title} — bar, then heading.  \cvsection*{Title} — never a bar.
 \newlength\cv@sectionskip \setlength\cv@sectionskip{4mm}
 \newif\ifcv@afterheading    % an entry right below a heading adds no top space
 \newcommand\cvsection{\@ifstar{\cv@section\@empty}{\cv@section\cv@bar}}
@@ -136,10 +138,12 @@
   \global\cv@afterheadingtrue}
 
 % ------------------------------------------------------------------- header --
-% Rectangular portrait (native 3:4 aspect), left-aligned, no frame.
+% Rectangular portrait (native 3:4 aspect), no frame, centred in the left
+% column's cell — between where the bars start and the vertical rule.
 \newcommand\cvphoto{%
   \cvifset{photo}{%
-    \includegraphics[width=0.55\linewidth]{\cvget{photo}}\par
+    \makebox[\linewidth]{\hspace{\dimexpr0.5\columnsep-\cv@barout\relax}%
+      \includegraphics[width=0.55\linewidth]{\cvget{photo}}}\par
     \vspace{4mm}}}
 
 % Name on two lines, title below
@@ -151,19 +155,26 @@
     \vspace{2.4mm}%
     {\cv@mediumfont\fontsize{10pt}{13pt}\selectfont\cvget{title}\par}}}
 
+% -------------------------------------------------------------------- links --
+% \cvlink{url}{text} — hyperlink with a thin underline at a fixed depth
+\newcommand\cv@ul[1]{%
+  \leavevmode\sbox0{#1}%
+  \rlap{\rule[-1.6pt]{\wd0}{0.45pt}}\usebox0}
+\newcommand\cvlink[2]{\href{#1}{\cv@ul{#2}}}
+
 % ------------------------------------------------------------- label lines --
 % \cvlabel{Label}{text} — run-in semibold label (skills, other info, contacts)
 \newcommand\cvlabel[2]{%
   {\RaggedRight\textbf{#1:}\space#2\par}\vspace{1.1mm}}
 
 \newcommand\cvcontacts{%
-  \cvifset{email}{\cvlabel{Email}{\href{mailto:\cvget{email}}{\cvget{email}}}}%
+  \cvifset{email}{\cvlabel{Email}{\cvlink{mailto:\cvget{email}}{\cvget{email}}}}%
   \cvifset{phone}{\cvlabel{Telefono}{\cvget{phone}}}%
   \cvifset{linkedin}{\cvlabel{LinkedIn}{%
-    \href{https://www.linkedin.com/in/\cvget{linkedin}}%
-         {linkedin.com/in/\cvget{linkedin}}}}%
+    \cvlink{https://www.linkedin.com/in/\cvget{linkedin}}%
+            {linkedin.com/in/\cvget{linkedin}}}}%
   \cvifset{website}{\cvlabel{Sito}{%
-    \href{https://\cvget{website}}{\cvget{website}}}}}
+    \cvlink{https://\cvget{website}}{\cvget{website}}}}}
 
 % ----------------------------------------------------------------- entries --
 % \cventry{Role}{Dates}{Organisation — Place}
